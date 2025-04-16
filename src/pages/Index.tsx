@@ -51,6 +51,8 @@ const Index = () => {
     requesterName: "",
     contactPhone: "",
     description: "",
+    returnForecast: "",
+    outageReason: "",
   });
   const [ombudsmanType, setOmbudsmanType] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<FileList | null>(null);
@@ -99,6 +101,8 @@ Descrição: ${formData.description}`;
       requesterName: "",
       contactPhone: "",
       description: "",
+      returnForecast: "",
+      outageReason: "",
     });
     toast({
       title: "Solicitação Enviada",
@@ -204,7 +208,9 @@ Endereço/Local: ${formData.description}`;
 Número da Ligação: ${formData.connectionNumber}
 Solicitante: ${formData.requesterName}
 Telefone: ${formData.contactPhone}
-Endereço/Informações: ${formData.description}`;
+Endereço/Informações: ${formData.description}
+Motivo (se conhecido): ${formData.outageReason}
+Previsão de Retorno (se conhecida): ${formData.returnForecast}`;
 
     window.open(
       `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
@@ -248,6 +254,8 @@ Comentário: ${formData.description}`;
       requesterName: "",
       contactPhone: "",
       description: "",
+      returnForecast: "",
+      outageReason: "",
     });
     setSelectedFiles(null);
     setFeedbackRating(0);
@@ -256,13 +264,21 @@ Comentário: ${formData.description}`;
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-center text-blue-700 mb-8">
-          SAMAE Jaguariaíva - Atendimento Virtual
-        </h1>
+        <header className="flex flex-col items-center mb-8">
+          <img 
+            src="https://www.samaejgv.com.br/wp-content/uploads/2025/01/novo-logo-samae1.png" 
+            alt="SAMAE Jaguariaíva" 
+            className="h-24 mb-4"
+          />
+          <h1 className="text-3xl font-bold text-center text-blue-700 mb-2">
+            SAMAE Jaguariaíva
+          </h1>
+          <p className="text-xl text-gray-600">Atendimento Virtual</p>
+        </header>
 
         <div className="grid gap-6 md:grid-cols-2 mb-8">
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Card className="p-6 shadow-md border-blue-100">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-blue-800">
               <MessageSquare className="w-5 h-5" />
               Solicitar Serviços
             </h2>
@@ -271,7 +287,7 @@ Comentário: ${formData.description}`;
                 <Button
                   key={service}
                   variant="outline"
-                  className="w-full justify-start"
+                  className="w-full justify-start hover:bg-blue-50 border-blue-200"
                   onClick={() => handleServiceRequest(service)}
                 >
                   {service}
@@ -281,13 +297,13 @@ Comentário: ${formData.description}`;
           </Card>
 
           <div className="space-y-6">
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Card className="p-6 shadow-md border-blue-100">
+              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-blue-800">
                 <LinkIcon className="w-5 h-5" />
                 Agência Virtual
               </h2>
               <Button
-                className="w-full"
+                className="w-full bg-blue-700 hover:bg-blue-800"
                 variant="default"
                 onClick={openVirtualAgency}
               >
@@ -295,13 +311,13 @@ Comentário: ${formData.description}`;
               </Button>
             </Card>
 
-            <Card className="p-6">
-              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Card className="p-6 shadow-md border-blue-100">
+              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-blue-800">
                 <FileText className="w-5 h-5" />
                 Ouvidoria
               </h2>
               <Button
-                className="w-full"
+                className="w-full border-blue-200 hover:bg-blue-50"
                 variant="outline"
                 onClick={() => {
                   resetFormData();
@@ -315,13 +331,13 @@ Comentário: ${formData.description}`;
         </div>
 
         <div className="grid gap-6 md:grid-cols-3 mb-8">
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Card className="p-6 shadow-md border-blue-100">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-blue-800">
               <Upload className="w-5 h-5" />
               Comprovantes
             </h2>
             <Button
-              className="w-full"
+              className="w-full border-blue-200 hover:bg-blue-50"
               variant="outline"
               onClick={() => {
                 resetFormData();
@@ -332,13 +348,13 @@ Comentário: ${formData.description}`;
             </Button>
           </Card>
 
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Card className="p-6 shadow-md border-blue-100">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-blue-800">
               <Phone className="w-5 h-5" />
               Atendimento
             </h2>
             <Button
-              className="w-full"
+              className="w-full border-blue-200 hover:bg-blue-50"
               variant="outline"
               onClick={() => {
                 resetFormData();
@@ -349,13 +365,13 @@ Comentário: ${formData.description}`;
             </Button>
           </Card>
 
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Card className="p-6 shadow-md border-blue-100">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-blue-800">
               <Star className="w-5 h-5" />
               Avaliação
             </h2>
             <Button
-              className="w-full"
+              className="w-full border-blue-200 hover:bg-blue-50"
               variant="outline"
               onClick={() => {
                 resetFormData();
@@ -368,14 +384,14 @@ Comentário: ${formData.description}`;
         </div>
 
         <div className="grid gap-6 md:grid-cols-3 mb-8">
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Card className="p-6 shadow-md border-blue-100">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-blue-800">
               <Droplets className="w-5 h-5" />
               Vazamentos
             </h2>
             <div className="space-y-2">
               <Button
-                className="w-full"
+                className="w-full border-blue-200 hover:bg-blue-50"
                 variant="outline"
                 onClick={() => {
                   resetFormData();
@@ -385,7 +401,7 @@ Comentário: ${formData.description}`;
                 Vazamento de Água
               </Button>
               <Button
-                className="w-full"
+                className="w-full border-blue-200 hover:bg-blue-50"
                 variant="outline"
                 onClick={() => {
                   resetFormData();
@@ -397,13 +413,13 @@ Comentário: ${formData.description}`;
             </div>
           </Card>
 
-          <Card className="p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Card className="p-6 shadow-md border-blue-100">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2 text-blue-800">
               <AlertTriangle className="w-5 h-5" />
               Comunicados
             </h2>
             <Button
-              className="w-full"
+              className="w-full border-blue-200 hover:bg-blue-50"
               variant="outline"
               onClick={() => {
                 resetFormData();
@@ -486,7 +502,7 @@ Comentário: ${formData.description}`;
                   required
                 />
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full bg-blue-700 hover:bg-blue-800">
                 Enviar Solicitação
               </Button>
             </form>
@@ -569,7 +585,7 @@ Comentário: ${formData.description}`;
                   max={3}
                 />
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full bg-blue-700 hover:bg-blue-800">
                 Enviar Manifestação
               </Button>
             </form>
@@ -624,7 +640,7 @@ Comentário: ${formData.description}`;
                   required
                 />
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full bg-blue-700 hover:bg-blue-800">
                 Enviar Comprovantes
               </Button>
             </form>
@@ -666,7 +682,7 @@ Comentário: ${formData.description}`;
                   required
                 />
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full bg-blue-700 hover:bg-blue-800">
                 Solicitar Atendimento
               </Button>
             </form>
@@ -730,7 +746,7 @@ Comentário: ${formData.description}`;
                   required
                 />
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full bg-blue-700 hover:bg-blue-800">
                 Comunicar Vazamento
               </Button>
             </form>
@@ -794,7 +810,7 @@ Comentário: ${formData.description}`;
                   required
                 />
               </div>
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full bg-blue-700 hover:bg-blue-800">
                 Comunicar Vazamento
               </Button>
             </form>
@@ -858,7 +874,27 @@ Comentário: ${formData.description}`;
                   required
                 />
               </div>
-              <Button type="submit" className="w-full">
+              <div className="space-y-2">
+                <Label htmlFor="outageReason">Motivo da Falta de Água (se conhecido)</Label>
+                <Input
+                  id="outageReason"
+                  value={formData.outageReason}
+                  onChange={(e) =>
+                    setFormData({ ...formData, outageReason: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="returnForecast">Previsão de Retorno (se conhecida)</Label>
+                <Input
+                  id="returnForecast"
+                  value={formData.returnForecast}
+                  onChange={(e) =>
+                    setFormData({ ...formData, returnForecast: e.target.value })
+                  }
+                />
+              </div>
+              <Button type="submit" className="w-full bg-blue-700 hover:bg-blue-800">
                 Comunicar Falta de Água
               </Button>
             </form>
@@ -886,7 +922,7 @@ Comentário: ${formData.description}`;
                       key={rating}
                       type="button"
                       variant={feedbackRating === rating ? "default" : "outline"}
-                      className="h-10 w-10 p-0"
+                      className={`h-10 w-10 p-0 ${feedbackRating === rating ? 'bg-blue-700' : 'border-blue-200'}`}
                       onClick={() => setFeedbackRating(rating)}
                     >
                       {rating}
@@ -914,7 +950,7 @@ Comentário: ${formData.description}`;
                   }
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={feedbackRating === 0}>
+              <Button type="submit" className="w-full bg-blue-700 hover:bg-blue-800" disabled={feedbackRating === 0}>
                 Enviar Avaliação
               </Button>
             </form>
@@ -927,6 +963,7 @@ Comentário: ${formData.description}`;
           onClose={() => setIsPresentialNoticeOpen(false)}
           title="Atendimento Presencial Necessário"
           message="Este serviço só pode ser solicitado presencialmente. Favor dirigir-se ao atendimento do SAMAE na Rua Porto Velho, 140, Jardim São Roque."
+          documentInfo={true}
         />
       </div>
     </div>

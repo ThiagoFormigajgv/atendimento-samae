@@ -4,7 +4,7 @@ import { AlertCircle, Clock } from "lucide-react";
 
 const FooterInfo = () => {
   return (
-    <footer className="bg-gray-100 text-gray-700 p-6 mt-8 rounded-lg">
+    <footer className="bg-blue-50 text-gray-700 p-6 mt-8 rounded-lg border border-blue-100">
       <div className="max-w-4xl mx-auto">
         <div className="flex flex-col space-y-4">
           <div className="flex items-start gap-2">
