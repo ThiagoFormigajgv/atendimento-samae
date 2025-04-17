@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -105,21 +104,51 @@ const OutageAnnouncementCard: React.FC<OutageAnnouncementCardProps> = ({ announc
   );
 };
 
+const STATUS_ENDPOINT = "https://api.jsonbin.io/v3/b/6610c217c60649328eeceb02";
+const STATUS_API_KEY = "$2a$10$VmRUPIvgk0DZCRURQBItbeQy3jkpZvxVCyj5gkCrOK3aXGnpk1n6i";
+
 const WaterOutageAnnouncements: React.FC = () => {
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<typeof outageAnnouncements[0] | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isNormalSupply, setIsNormalSupply] = useState(() => {
-    // Initialize from localStorage if available
-    const saved = localStorage.getItem("samaejgv-normal-supply");
-    return saved !== null ? JSON.parse(saved) : true;
-  });
+  const [isNormalSupply, setIsNormalSupply] = useState(true);
+  const [isInitialized, setIsInitialized] = useState(false);
 
-  // Save the status to localStorage whenever it changes
   useEffect(() => {
-    localStorage.setItem("samaejgv-normal-supply", JSON.stringify(isNormalSupply));
-  }, [isNormalSupply]);
+    const fetchInitialStatus = async () => {
+      try {
+        const response = await fetch(STATUS_ENDPOINT, {
+          headers: {
+            "X-Master-Key": STATUS_API_KEY
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          setIsNormalSupply(data.record.isNormalSupply);
+        } else {
+          console.error("Erro ao buscar status inicial:", response.statusText);
+          const savedStatus = localStorage.getItem("samaejgv-normal-supply");
+          setIsNormalSupply(savedStatus !== null ? JSON.parse(savedStatus) : true);
+        }
+      } catch (error) {
+        console.error("Erro na requisição inicial:", error);
+        const savedStatus = localStorage.getItem("samaejgv-normal-supply");
+        setIsNormalSupply(savedStatus !== null ? JSON.parse(savedStatus) : true);
+      } finally {
+        setIsInitialized(true);
+      }
+    };
+
+    fetchInitialStatus();
+  }, []);
+
+  useEffect(() => {
+    if (isInitialized) {
+      localStorage.setItem("samaejgv-normal-supply", JSON.stringify(isNormalSupply));
+    }
+  }, [isNormalSupply, isInitialized]);
 
   const handleViewDetails = (announcement: typeof outageAnnouncements[0]) => {
     setSelectedAnnouncement(announcement);
@@ -133,9 +162,16 @@ const WaterOutageAnnouncements: React.FC = () => {
     )
   );
 
-  // Add console.log to debug
-  console.log("isNormalSupply:", isNormalSupply);
-  console.log("filteredAnnouncements:", filteredAnnouncements);
+  if (!isInitialized) {
+    return (
+      <div className="w-full flex justify-center py-8">
+        <div className="animate-pulse flex flex-col items-center">
+          <div className="h-32 w-full bg-gray-200 rounded-lg mb-4"></div>
+          <div className="h-96 w-full bg-gray-100 rounded-lg"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -229,7 +265,6 @@ const WaterOutageAnnouncements: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Announcement Details Dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-md">
           {selectedAnnouncement && (
