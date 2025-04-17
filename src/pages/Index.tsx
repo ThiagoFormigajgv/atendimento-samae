@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -33,6 +32,7 @@ import {
 } from "lucide-react";
 import ServiceNotice from "@/components/ServiceNotice";
 import FooterInfo from "@/components/FooterInfo";
+import WaterOutageAnnouncements from "@/components/WaterOutageAnnouncements";
 
 const Index = () => {
   const [isServiceFormOpen, setIsServiceFormOpen] = useState(false);
@@ -263,7 +263,7 @@ Comentário: ${formData.description}`;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         <header className="flex flex-col items-center mb-8">
           <img 
             src="https://www.samaejgv.com.br/wp-content/uploads/2025/01/novo-logo-samae1.png" 
@@ -426,15 +426,17 @@ Comentário: ${formData.description}`;
                 setIsWaterOutageFormOpen(true);
               }}
             >
-              Falta de Água
+              Comunicar Falta de Água
             </Button>
           </Card>
         </div>
 
-        {/* Footer */}
+        <div className="mb-8">
+          <WaterOutageAnnouncements />
+        </div>
+
         <FooterInfo />
 
-        {/* Service Request Form Dialog */}
         <Dialog
           open={isServiceFormOpen}
           onOpenChange={setIsServiceFormOpen}
@@ -509,7 +511,6 @@ Comentário: ${formData.description}`;
           </DialogContent>
         </Dialog>
 
-        {/* Ombudsman Form Dialog */}
         <Dialog
           open={isOmbudsmanFormOpen}
           onOpenChange={setIsOmbudsmanFormOpen}
@@ -592,7 +593,6 @@ Comentário: ${formData.description}`;
           </DialogContent>
         </Dialog>
 
-        {/* Proof Upload Form Dialog */}
         <Dialog
           open={isProofUploadOpen}
           onOpenChange={setIsProofUploadOpen}
@@ -647,7 +647,6 @@ Comentário: ${formData.description}`;
           </DialogContent>
         </Dialog>
 
-        {/* Representative Form Dialog */}
         <Dialog
           open={isRepresentativeFormOpen}
           onOpenChange={setIsRepresentativeFormOpen}
@@ -689,7 +688,6 @@ Comentário: ${formData.description}`;
           </DialogContent>
         </Dialog>
 
-        {/* Water Leak Form Dialog */}
         <Dialog
           open={isWaterLeakFormOpen}
           onOpenChange={setIsWaterLeakFormOpen}
@@ -753,7 +751,6 @@ Comentário: ${formData.description}`;
           </DialogContent>
         </Dialog>
 
-        {/* Sewage Leak Form Dialog */}
         <Dialog
           open={isSewageLeakFormOpen}
           onOpenChange={setIsSewageLeakFormOpen}
@@ -817,14 +814,16 @@ Comentário: ${formData.description}`;
           </DialogContent>
         </Dialog>
 
-        {/* Water Outage Form Dialog */}
         <Dialog
           open={isWaterOutageFormOpen}
           onOpenChange={setIsWaterOutageFormOpen}
         >
           <DialogContent className="max-w-md">
             <DialogHeader>
-              <DialogTitle>Comunicar Falta de Água</DialogTitle>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                Comunicar Falta de Água
+              </DialogTitle>
               <DialogDescription>
                 Informe detalhes sobre a falta de água
               </DialogDescription>
@@ -895,13 +894,13 @@ Comentário: ${formData.description}`;
                 />
               </div>
               <Button type="submit" className="w-full bg-blue-700 hover:bg-blue-800">
+                <SendHorizontal className="h-4 w-4 mr-2" />
                 Comunicar Falta de Água
               </Button>
             </form>
           </DialogContent>
         </Dialog>
 
-        {/* Feedback Form Dialog */}
         <Dialog
           open={isFeedbackFormOpen}
           onOpenChange={setIsFeedbackFormOpen}
@@ -957,7 +956,6 @@ Comentário: ${formData.description}`;
           </DialogContent>
         </Dialog>
 
-        {/* Presential Service Notice */}
         <ServiceNotice
           isOpen={isPresentialNoticeOpen}
           onClose={() => setIsPresentialNoticeOpen(false)}
