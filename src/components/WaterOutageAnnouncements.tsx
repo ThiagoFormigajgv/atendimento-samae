@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -132,6 +132,10 @@ const WaterOutageAnnouncements: React.FC = () => {
       neighborhood.toLowerCase().includes(searchTerm.toLowerCase())
     )
   );
+
+  // Add console.log to debug
+  console.log("isNormalSupply:", isNormalSupply);
+  console.log("filteredAnnouncements:", filteredAnnouncements);
 
   return (
     <div className="w-full">
