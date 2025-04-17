@@ -1,12 +1,13 @@
 
-import React, { useState } from "react";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useState, useEffect } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Droplets, Clock, MapPin, AlertTriangle, Info, Search } from "lucide-react";
+import { Droplets, Clock, MapPin, AlertTriangle, Info, Search, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import WaterSupplyToggle from "./WaterSupplyToggle";
 
 // Sample outage announcements data (in a real application, this would come from an API)
 const outageAnnouncements = [
@@ -109,6 +110,16 @@ const WaterOutageAnnouncements: React.FC = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isNormalSupply, setIsNormalSupply] = useState(() => {
+    // Initialize from localStorage if available
+    const saved = localStorage.getItem("samaejgv-normal-supply");
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  // Save the status to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem("samaejgv-normal-supply", JSON.stringify(isNormalSupply));
+  }, [isNormalSupply]);
 
   const handleViewDetails = (announcement: typeof outageAnnouncements[0]) => {
     setSelectedAnnouncement(announcement);
@@ -124,6 +135,11 @@ const WaterOutageAnnouncements: React.FC = () => {
 
   return (
     <div className="w-full">
+      <WaterSupplyToggle 
+        isNormalSupply={isNormalSupply} 
+        onToggle={setIsNormalSupply} 
+      />
+
       <Card className="border-blue-200 shadow-sm">
         <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 pb-3">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
@@ -131,15 +147,17 @@ const WaterOutageAnnouncements: React.FC = () => {
               <Droplets className="h-5 w-5 text-blue-700" />
               <CardTitle className="text-xl font-bold text-blue-800">Comunicados de Falta de Água</CardTitle>
             </div>
-            <div className="relative">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-              <Input
-                placeholder="Buscar por bairro..."
-                className="pl-9 w-full sm:w-auto"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
+            {!isNormalSupply && (
+              <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                <Input
+                  placeholder="Buscar por bairro..."
+                  className="pl-9 w-full sm:w-auto"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+            )}
           </div>
           <CardDescription className="text-blue-700 mt-1">
             Quadro de avisos sobre interrupções no abastecimento
@@ -147,48 +165,63 @@ const WaterOutageAnnouncements: React.FC = () => {
         </CardHeader>
 
         <CardContent className="pt-4">
-          <div className="space-y-2">
-            {filteredAnnouncements.length > 0 ? (
-              <>
-                {filteredAnnouncements.slice(0, isExpanded ? filteredAnnouncements.length : 2).map(announcement => (
-                  <OutageAnnouncementCard 
-                    key={announcement.id} 
-                    announcement={announcement} 
-                    onViewDetails={handleViewDetails} 
-                  />
-                ))}
-                
-                {filteredAnnouncements.length > 2 && (
-                  <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-                    <CollapsibleTrigger asChild>
-                      <Button variant="ghost" size="sm" className="w-full text-blue-600">
-                        {isExpanded ? "Mostrar menos" : `Ver mais ${filteredAnnouncements.length - 2} comunicados`}
-                      </Button>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="space-y-2">
-                      {filteredAnnouncements.slice(2).map(announcement => (
-                        <OutageAnnouncementCard 
-                          key={announcement.id} 
-                          announcement={announcement} 
-                          onViewDetails={handleViewDetails} 
-                        />
-                      ))}
-                    </CollapsibleContent>
-                  </Collapsible>
-                )}
-              </>
-            ) : (
-              <div className="text-center py-8">
-                <div className="inline-flex rounded-full bg-blue-100 p-3 mb-4">
-                  <Droplets className="h-6 w-6 text-blue-600" />
-                </div>
-                <h3 className="text-lg font-medium text-gray-900 mb-1">Sem comunicados no momento</h3>
-                <p className="text-gray-500">
-                  Não há interrupções de água programadas ou em andamento.
-                </p>
+          {isNormalSupply ? (
+            <div className="text-center py-16 px-4">
+              <div className="inline-flex rounded-full bg-green-100 p-6 mb-6">
+                <CheckCircle className="h-10 w-10 text-green-600" />
               </div>
-            )}
-          </div>
+              <h3 className="text-2xl font-medium text-gray-900 mb-3">Abastecimento Normal</h3>
+              <p className="text-gray-600 max-w-lg mx-auto mb-2">
+                No momento, o abastecimento de água está funcionando normalmente em toda a cidade.
+              </p>
+              <p className="text-sm text-green-600 font-medium">
+                Todas as áreas estão com fornecimento regular
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredAnnouncements.length > 0 ? (
+                <>
+                  {filteredAnnouncements.slice(0, isExpanded ? filteredAnnouncements.length : 2).map(announcement => (
+                    <OutageAnnouncementCard 
+                      key={announcement.id} 
+                      announcement={announcement} 
+                      onViewDetails={handleViewDetails} 
+                    />
+                  ))}
+                  
+                  {filteredAnnouncements.length > 2 && (
+                    <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+                      <CollapsibleTrigger asChild>
+                        <Button variant="ghost" size="sm" className="w-full text-blue-600">
+                          {isExpanded ? "Mostrar menos" : `Ver mais ${filteredAnnouncements.length - 2} comunicados`}
+                        </Button>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-2">
+                        {filteredAnnouncements.slice(2).map(announcement => (
+                          <OutageAnnouncementCard 
+                            key={announcement.id} 
+                            announcement={announcement} 
+                            onViewDetails={handleViewDetails} 
+                          />
+                        ))}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
+                </>
+              ) : (
+                <div className="text-center py-8">
+                  <div className="inline-flex rounded-full bg-blue-100 p-3 mb-4">
+                    <Droplets className="h-6 w-6 text-blue-600" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-1">Sem comunicados no momento</h3>
+                  <p className="text-gray-500">
+                    Não há interrupções de água programadas ou em andamento.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
         </CardContent>
       </Card>
 
