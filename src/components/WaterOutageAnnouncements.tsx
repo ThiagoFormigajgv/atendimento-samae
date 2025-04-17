@@ -104,8 +104,7 @@ const OutageAnnouncementCard: React.FC<OutageAnnouncementCardProps> = ({ announc
   );
 };
 
-const STATUS_ENDPOINT = "https://api.jsonbin.io/v3/b/6610c217c60649328eeceb02";
-const STATUS_API_KEY = "$2a$10$VmRUPIvgk0DZCRURQBItbeQy3jkpZvxVCyj5gkCrOK3aXGnpk1n6i";
+const LOCAL_STORAGE_KEY = "water-supply-status";
 
 const WaterOutageAnnouncements: React.FC = () => {
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<typeof outageAnnouncements[0] | null>(null);
@@ -118,35 +117,36 @@ const WaterOutageAnnouncements: React.FC = () => {
   useEffect(() => {
     const fetchInitialStatus = async () => {
       try {
-        const response = await fetch(STATUS_ENDPOINT, {
-          headers: {
-            "X-Master-Key": STATUS_API_KEY
-          }
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          setIsNormalSupply(data.record.isNormalSupply);
-        } else {
-          console.error("Erro ao buscar status inicial:", response.statusText);
-          const savedStatus = localStorage.getItem("samaejgv-normal-supply");
-          setIsNormalSupply(savedStatus !== null ? JSON.parse(savedStatus) : true);
-        }
+        const storedStatus = localStorage.getItem(LOCAL_STORAGE_KEY);
+        setIsNormalSupply(storedStatus === null ? true : storedStatus === "true");
       } catch (error) {
-        console.error("Erro na requisição inicial:", error);
-        const savedStatus = localStorage.getItem("samaejgv-normal-supply");
-        setIsNormalSupply(savedStatus !== null ? JSON.parse(savedStatus) : true);
+        console.error("Erro ao buscar status inicial:", error);
+        setIsNormalSupply(true);
       } finally {
         setIsInitialized(true);
       }
     };
 
     fetchInitialStatus();
-  }, []);
+
+    const intervalId = setInterval(() => {
+      const storedStatus = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (storedStatus !== null) {
+        const newStatus = storedStatus === "true";
+        if (newStatus !== isNormalSupply) {
+          setIsNormalSupply(newStatus);
+        }
+      }
+    }, 5000);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [isNormalSupply]);
 
   useEffect(() => {
     if (isInitialized) {
-      localStorage.setItem("samaejgv-normal-supply", JSON.stringify(isNormalSupply));
+      localStorage.setItem(LOCAL_STORAGE_KEY, isNormalSupply.toString());
     }
   }, [isNormalSupply, isInitialized]);
 

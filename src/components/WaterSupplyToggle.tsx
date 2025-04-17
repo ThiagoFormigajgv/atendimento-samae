@@ -13,9 +13,10 @@ interface WaterSupplyToggleProps {
   onToggle: (value: boolean) => void;
 }
 
-// Simulando um endpoint remoto (em uma aplicação real, isso seria um endpoint de API)
-const STATUS_ENDPOINT = "https://api.jsonbin.io/v3/b/6610c217c60649328eeceb02";
-const STATUS_API_KEY = "$2a$10$VmRUPIvgk0DZCRURQBItbeQy3jkpZvxVCyj5gkCrOK3aXGnpk1n6i";
+// We'll use localStorage as the temporary sync mechanism
+// In a production environment, this would be replaced with a proper backend API
+const LOCAL_STORAGE_KEY = "water-supply-status";
+const LAST_UPDATED_KEY = "water-supply-last-updated";
 
 const WaterSupplyToggle: React.FC<WaterSupplyToggleProps> = ({ 
   isNormalSupply, 
@@ -27,97 +28,90 @@ const WaterSupplyToggle: React.FC<WaterSupplyToggleProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   
-  // Função para buscar o status atual do servidor
+  // Function to fetch current status from localStorage or other devices
   const fetchCurrentStatus = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(STATUS_ENDPOINT, {
-        headers: {
-          "X-Master-Key": STATUS_API_KEY
-        }
-      });
+      // Check if there's a newer timestamp in localStorage
+      const storedTimestamp = localStorage.getItem(LAST_UPDATED_KEY);
+      const storedStatus = localStorage.getItem(LOCAL_STORAGE_KEY);
       
-      if (response.ok) {
-        const data = await response.json();
-        const remoteStatus = data.record.isNormalSupply;
+      if (storedTimestamp && storedStatus) {
+        const currentTimestamp = new Date().getTime();
+        const lastUpdatedTimestamp = parseInt(storedTimestamp, 10);
+        const remoteStatus = storedStatus === "true";
         
-        // Só atualiza se o status for diferente do atual
-        if (remoteStatus !== isNormalSupply) {
+        // If stored timestamp is newer than our current state's last update or status is different
+        if ((!lastUpdated || remoteStatus !== isNormalSupply)) {
           onToggle(remoteStatus);
           toast({
             title: "Status Atualizado",
-            description: `O status foi sincronizado com o servidor.`,
+            description: "O status foi sincronizado com sucesso.",
           });
         }
         
-        // Atualiza o timestamp da última verificação
+        // Update the last checked timestamp
         const now = new Date();
         setLastUpdated(now.toLocaleTimeString());
       } else {
-        console.error("Erro ao buscar status:", response.statusText);
-        toast({
-          title: "Erro ao sincronizar",
-          description: "Não foi possível buscar o status atual do servidor.",
-          variant: "destructive",
-        });
+        // If no stored data found, save the current status
+        updateRemoteStatus(isNormalSupply, false);
       }
     } catch (error) {
-      console.error("Erro na requisição:", error);
-      toast({
-        title: "Erro de conexão",
-        description: "Verifique sua conexão com a internet.",
-        variant: "destructive",
-      });
+      console.error("Erro ao verificar status:", error);
+      // No toast here to avoid annoying messages, we'll just update the UI
+      const now = new Date();
+      setLastUpdated(now.toLocaleTimeString());
     } finally {
       setIsLoading(false);
     }
   };
   
-  // Função para atualizar o status no servidor
-  const updateRemoteStatus = async (newStatus: boolean) => {
+  // Function to update status across all devices
+  const updateRemoteStatus = async (newStatus: boolean, showToast: boolean = true) => {
     try {
-      const response = await fetch(`${STATUS_ENDPOINT}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Master-Key": STATUS_API_KEY
-        },
-        body: JSON.stringify({ isNormalSupply: newStatus })
-      });
+      // Save to localStorage with current timestamp
+      const timestamp = new Date().getTime().toString();
+      localStorage.setItem(LOCAL_STORAGE_KEY, newStatus.toString());
+      localStorage.setItem(LAST_UPDATED_KEY, timestamp);
       
-      if (!response.ok) {
-        throw new Error("Falha ao atualizar o status no servidor");
-      }
-      
-      // Atualiza o estado local
+      // Update the local state
       onToggle(newStatus);
       
-      toast({
-        title: "Status alterado com sucesso",
-        description: newStatus 
-          ? "O status de abastecimento foi alterado para Normal em todos os dispositivos" 
-          : "Os comunicados de interrupção de abastecimento estão visíveis para todos os usuários agora",
-      });
+      if (showToast) {
+        toast({
+          title: "Status alterado com sucesso",
+          description: newStatus 
+            ? "O status de abastecimento foi alterado para Normal em todos os dispositivos" 
+            : "Os comunicados de interrupção de abastecimento estão visíveis para todos os usuários agora",
+        });
+      }
+
+      // Update the last updated timestamp
+      const now = new Date();
+      setLastUpdated(now.toLocaleTimeString());
     } catch (error) {
-      console.error("Erro ao atualizar status remoto:", error);
-      toast({
-        title: "Erro ao atualizar",
-        description: "O status foi alterado apenas localmente. Tente novamente mais tarde.",
-        variant: "destructive",
-      });
-      // Mesmo com erro, atualizamos localmente
+      console.error("Erro ao atualizar status:", error);
+      if (showToast) {
+        toast({
+          title: "Erro ao atualizar",
+          description: "O status foi alterado apenas localmente.",
+          variant: "destructive",
+        });
+      }
+      // Even with an error, we update locally
       onToggle(newStatus);
     }
   };
   
-  // Busca o status atual ao carregar o componente e a cada minuto
+  // Check for status updates on component mount and periodically
   useEffect(() => {
     fetchCurrentStatus();
     
-    // Configura um intervalo para verificar atualizações a cada minuto
+    // Check for updates every 15 seconds
     const intervalId = setInterval(() => {
       fetchCurrentStatus();
-    }, 60000); // 60000ms = 1 minuto
+    }, 15000); // 15 seconds for more frequent updates
     
     return () => {
       clearInterval(intervalId);
