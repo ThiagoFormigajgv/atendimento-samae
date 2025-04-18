@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import React, { useState } from "react";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Droplets, Clock, MapPin, AlertTriangle, Info, Search, CheckCircle } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Droplets, Clock, MapPin, AlertTriangle, Info, CheckCircle } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import WaterSupplyToggle from "./WaterSupplyToggle";
 
 // Sample outage announcements data (in a real application, this would come from an API)
 const outageAnnouncements = [
@@ -104,100 +102,25 @@ const OutageAnnouncementCard: React.FC<OutageAnnouncementCardProps> = ({ announc
   );
 };
 
-const LOCAL_STORAGE_KEY = "water-supply-status";
-
 const WaterOutageAnnouncements: React.FC = () => {
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<typeof outageAnnouncements[0] | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isNormalSupply, setIsNormalSupply] = useState(true);
-  const [isInitialized, setIsInitialized] = useState(false);
-
-  useEffect(() => {
-    const fetchInitialStatus = async () => {
-      try {
-        const storedStatus = localStorage.getItem(LOCAL_STORAGE_KEY);
-        setIsNormalSupply(storedStatus === null ? true : storedStatus === "true");
-      } catch (error) {
-        console.error("Erro ao buscar status inicial:", error);
-        setIsNormalSupply(true);
-      } finally {
-        setIsInitialized(true);
-      }
-    };
-
-    fetchInitialStatus();
-
-    const intervalId = setInterval(() => {
-      const storedStatus = localStorage.getItem(LOCAL_STORAGE_KEY);
-      if (storedStatus !== null) {
-        const newStatus = storedStatus === "true";
-        if (newStatus !== isNormalSupply) {
-          setIsNormalSupply(newStatus);
-        }
-      }
-    }, 5000);
-
-    return () => {
-      clearInterval(intervalId);
-    };
-  }, [isNormalSupply]);
-
-  useEffect(() => {
-    if (isInitialized) {
-      localStorage.setItem(LOCAL_STORAGE_KEY, isNormalSupply.toString());
-    }
-  }, [isNormalSupply, isInitialized]);
-
+  
   const handleViewDetails = (announcement: typeof outageAnnouncements[0]) => {
     setSelectedAnnouncement(announcement);
     setIsDialogOpen(true);
   };
 
-  const filteredAnnouncements = outageAnnouncements.filter(announcement => 
-    announcement.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    announcement.neighborhoods.some(neighborhood => 
-      neighborhood.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  );
-
-  if (!isInitialized) {
-    return (
-      <div className="w-full flex justify-center py-8">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="h-32 w-full bg-gray-200 rounded-lg mb-4"></div>
-          <div className="h-96 w-full bg-gray-100 rounded-lg"></div>
-        </div>
-      </div>
-    );
-  }
+  const hasOutages = outageAnnouncements.length > 0;
 
   return (
     <div className="w-full">
-      <WaterSupplyToggle 
-        isNormalSupply={isNormalSupply} 
-        onToggle={setIsNormalSupply} 
-      />
-
       <Card className="border-blue-200 shadow-sm">
         <CardHeader className="bg-gradient-to-r from-blue-50 to-blue-100 pb-3">
-          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-            <div className="flex items-center gap-2">
-              <Droplets className="h-5 w-5 text-blue-700" />
-              <CardTitle className="text-xl font-bold text-blue-800">Comunicados de Falta de Água</CardTitle>
-            </div>
-            {!isNormalSupply && (
-              <div className="relative">
-                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-                <Input
-                  placeholder="Buscar por bairro..."
-                  className="pl-9 w-full sm:w-auto"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-            )}
+          <div className="flex items-center gap-2">
+            <Droplets className="h-5 w-5 text-blue-700" />
+            <CardTitle className="text-xl font-bold text-blue-800">Comunicados de Interrupção no Abastecimento</CardTitle>
           </div>
           <CardDescription className="text-blue-700 mt-1">
             Quadro de avisos sobre interrupções no abastecimento
@@ -205,7 +128,7 @@ const WaterOutageAnnouncements: React.FC = () => {
         </CardHeader>
 
         <CardContent className="pt-4">
-          {isNormalSupply ? (
+          {!hasOutages ? (
             <div className="text-center py-16 px-4">
               <div className="inline-flex rounded-full bg-green-100 p-6 mb-6">
                 <CheckCircle className="h-10 w-10 text-green-600" />
@@ -220,45 +143,31 @@ const WaterOutageAnnouncements: React.FC = () => {
             </div>
           ) : (
             <div className="space-y-2">
-              {filteredAnnouncements.length > 0 ? (
-                <>
-                  {filteredAnnouncements.slice(0, isExpanded ? filteredAnnouncements.length : 2).map(announcement => (
-                    <OutageAnnouncementCard 
-                      key={announcement.id} 
-                      announcement={announcement} 
-                      onViewDetails={handleViewDetails} 
-                    />
-                  ))}
-                  
-                  {filteredAnnouncements.length > 2 && (
-                    <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
-                      <CollapsibleTrigger asChild>
-                        <Button variant="ghost" size="sm" className="w-full text-blue-600">
-                          {isExpanded ? "Mostrar menos" : `Ver mais ${filteredAnnouncements.length - 2} comunicados`}
-                        </Button>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="space-y-2">
-                        {filteredAnnouncements.slice(2).map(announcement => (
-                          <OutageAnnouncementCard 
-                            key={announcement.id} 
-                            announcement={announcement} 
-                            onViewDetails={handleViewDetails} 
-                          />
-                        ))}
-                      </CollapsibleContent>
-                    </Collapsible>
-                  )}
-                </>
-              ) : (
-                <div className="text-center py-8">
-                  <div className="inline-flex rounded-full bg-blue-100 p-3 mb-4">
-                    <Droplets className="h-6 w-6 text-blue-600" />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-1">Sem comunicados no momento</h3>
-                  <p className="text-gray-500">
-                    Não há interrupções de água programadas ou em andamento.
-                  </p>
-                </div>
+              {outageAnnouncements.slice(0, isExpanded ? outageAnnouncements.length : 2).map(announcement => (
+                <OutageAnnouncementCard 
+                  key={announcement.id} 
+                  announcement={announcement} 
+                  onViewDetails={handleViewDetails} 
+                />
+              ))}
+              
+              {outageAnnouncements.length > 2 && (
+                <Collapsible open={isExpanded} onOpenChange={setIsExpanded}>
+                  <CollapsibleTrigger asChild>
+                    <Button variant="ghost" size="sm" className="w-full text-blue-600">
+                      {isExpanded ? "Mostrar menos" : `Ver mais ${outageAnnouncements.length - 2} comunicados`}
+                    </Button>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-2">
+                    {outageAnnouncements.slice(2).map(announcement => (
+                      <OutageAnnouncementCard 
+                        key={announcement.id} 
+                        announcement={announcement} 
+                        onViewDetails={handleViewDetails} 
+                      />
+                    ))}
+                  </CollapsibleContent>
+                </Collapsible>
               )}
             </div>
           )}
