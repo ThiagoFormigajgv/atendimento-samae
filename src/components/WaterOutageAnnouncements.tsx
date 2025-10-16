@@ -37,7 +37,7 @@ const outageAnnouncements = [
   },
   {
     id: 3,
-    title: "Baixa Pressão - Região Oeste",
+    title: "Baixa Pressão - Primavera 3",
     date: "15/04/2025",
     time: "Durante o dia todo",
     type: "Informativo",
